@@ -53,7 +53,6 @@ class App extends React.Component {
         `https://geocoding-api.open-meteo.com/v1/search?name=${this.state.location}`
       );
       const geoData = await geoRes.json();
-      console.log(geoData);
 
       if (!geoData.results) throw new Error("Location not found");
 
@@ -117,7 +116,7 @@ class Weather extends React.Component {
 
     return (
       <div>
-        <h2>Weather {this.props.location}</h2>
+        <h2 style={{color: '#1c1c64'}}>Weather {this.props.location}</h2>
         <ul className="weather">
           {dates.map((date, i) => (
             <Day

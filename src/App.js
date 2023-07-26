@@ -18,13 +18,6 @@ function getWeatherIcon(wmoCode) {
   return icons.get(arr);
 }
 
-function convertToFlag(countryCode) {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split("")
-    .map((char) => 127397 + char.charCodeAt());
-  return String.fromCodePoint(...codePoints);
-}
 
 function formatDay(dateStr) {
   return new Intl.DateTimeFormat("en", {
@@ -51,15 +44,14 @@ class App extends React.Component {
         `https://geocoding-api.open-meteo.com/v1/search?name=${this.state.location}`
       );
       const geoData = await geoRes.json();
-      console.log(geoData);
-
+     
       if (!geoData.results) throw new Error("Location not found");
 
-      const { latitude, longitude, timezone, name, country_code } =
+      const { latitude, longitude, timezone, name, country, admin1 } =
         geoData.results.at(0);
 
       this.setState({
-        displayLocation: `${name} ${convertToFlag(country_code)}`,
+        displayLocation: `in ${name}, ${admin1}, ${country}`,
       });
 
       // 2) Getting actual weather
@@ -70,6 +62,7 @@ class App extends React.Component {
       this.setState({ weather: weatherData.daily });
     } catch (err) {
       console.error(err);
+      this.setState({ weather: {} });
     } finally {
       this.setState({ isLoading: false });
     }
@@ -102,14 +95,21 @@ class App extends React.Component {
           onChangeLocation={this.setLocation}
         />
 
-        {this.state.isLoading && <p className="loader">Loading...</p>}
+        {
+          this.state.isLoading ? <p className="loader">Loading...</p>
 
-        {this.state.weather.weathercode && (
-          <Weather
-            weather={this.state.weather}
-            location={this.state.displayLocation}
-          />
-        )}
+            : this?.state?.weather?.weathercode ? (
+              <Weather
+                weather={this.state.weather}
+                location={this.state.displayLocation}
+              />
+            ) : this.state.location ? <div className="no-data-found"> <h2>No Data Found</h2>
+              <h3>
+                Please check your spelling or try a different search term.
+              </h3>
+            </div> : null
+        }
+
       </div>
     );
   }
@@ -133,9 +133,6 @@ class Input extends React.Component {
 }
 
 class Weather extends React.Component {
-  componentWillUnmount() {
-    console.log("Weather will unmount");
-  }
 
   render() {
     const {
@@ -147,7 +144,7 @@ class Weather extends React.Component {
 
     return (
       <div>
-        <h2>Weather {this.props.location}</h2>
+        <h2 style={{color: '#1c1c64'}}>Weather {this.props.location}</h2>
         <ul className="weather">
           {dates.map((date, i) => (
             <Day
